@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Orchestra Web</title>
+<link rel="icon" href="orchestra.png" />
+<style>
+  :root{--bg:#0b0e14;--bg2:#111622;--bg3:#171d2b;--line:#263044;--fg:#d6deeb;--muted:#8a94a8;--ok:#34d399;--bad:#f87171;--warn:#fbbf24;--run:#60a5fa;--accent:#7dd3fc;--violet:#c4b5fd}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 Inter,"Segoe UI",system-ui,sans-serif}
+  .sitebar{display:flex;align-items:center;gap:16px;padding:10px 18px;background:#0a101c;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  .sitebar .name{font-weight:700;letter-spacing:2px;color:var(--accent)}
+  .sitebar a.back{color:var(--muted);text-decoration:none;font-size:13px}
+  .sitebar a.back:hover{color:var(--fg)}
+  .sitebar .right{margin-left:auto;color:var(--muted);font-size:12px}
+  a{color:var(--accent)}
+  code,pre,.mono{font-family:"Cascadia Mono","JetBrains Mono",Consolas,monospace;font-size:13px}
+  pre{background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:12px;overflow:auto}
+  .wrap{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  nav{position:sticky;top:41px;height:calc(100vh - 41px);overflow:auto;background:var(--bg2);border-right:1px solid var(--line);padding:18px 14px}
+  nav .logo{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-weight:700;letter-spacing:2px;color:var(--accent)}
+  nav a{display:block;padding:5px 8px;border-radius:4px;color:var(--fg);text-decoration:none;font-size:13px}
+  nav a:hover{background:var(--bg3)}
+  nav small{display:block;color:var(--muted);margin:12px 8px 4px;letter-spacing:1.5px;font-size:10px}
+  main{padding:30px 46px;max-width:1150px}
+  h1{font-size:30px;margin:0 0 6px}
+  h2{margin:48px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--line);color:var(--accent);font-size:21px}
+  h3{margin:26px 0 8px;font-size:16px}
+  .lead{color:var(--muted);font-size:16px;max-width:900px}
+  .pill{display:inline-block;padding:0 8px;border-radius:10px;font-size:11px;border:1px solid var(--line);color:var(--muted);vertical-align:middle}
+  .pill.ok{color:var(--ok);border-color:var(--ok)}.pill.bad{color:var(--bad);border-color:var(--bad)}.pill.warn{color:var(--warn);border-color:var(--warn)}.pill.run{color:var(--run);border-color:var(--run)}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g5{grid-template-columns:repeat(5,1fr)}
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+  .card h4{margin:0 0 6px;font-size:14px}
+  .card p{margin:0;color:var(--muted);font-size:13px}
+  .layer{border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:0;background:var(--bg2)}
+  .layer .t{font-size:11px;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+  .boxes{display:flex;flex-wrap:wrap;gap:8px}
+  .box{background:var(--bg3);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px}
+  .box.core{border-color:var(--run)}.box.ok{border-color:var(--ok)}.box.bad{border-color:var(--bad)}.box.warn{border-color:var(--warn)}.box.v{border-color:var(--violet)}
+  .arrow{text-align:center;color:var(--muted);font-size:22px;line-height:1;margin:4px 0}
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .flow .step{flex:1;min-width:150px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;position:relative;margin-right:26px;font-size:13px}
+  .flow .step:after{content:"➜";position:absolute;right:-22px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+  .flow .step:last-child{margin-right:0}.flow .step:last-child:after{content:""}
+  .step b{display:block;margin-bottom:3px}
+  .kbd{background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:12px}
+  .callout{border-left:3px solid var(--warn);background:#1b1a12;padding:10px 14px;border-radius:0 6px 6px 0;margin:14px 0}
+  .callout.ok{border-color:var(--ok);background:#0f1f19}
+  .callout.info{border-color:var(--run);background:#0f1726}
+  svg text{font-family:Inter,"Segoe UI",system-ui,sans-serif}
+  .mut{color:var(--muted)}
+  ul.tight li{margin:3px 0}
+  .pool{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .bar{height:18px;border-radius:9px;background:var(--bg3);border:1px solid var(--line);position:relative;overflow:hidden;margin-top:6px}
+  .bar .fill{height:100%;background:linear-gradient(90deg,#1d3a5c,#60a5fa)}
+  .bar .res{position:absolute;right:0;top:0;height:100%;width:40%;background:repeating-linear-gradient(45deg,transparent 0 6px,rgba(248,113,113,.25) 6px 12px);border-left:2px solid var(--bad)}
+  details{margin:8px 0}summary{cursor:pointer;color:var(--accent)}
+  .ai{background:#0f1726;border:1px solid #27406b;border-radius:8px;padding:16px 18px}
+  .ai li{margin:5px 0}
+</style>
+</head>
+<body>
+<div class="sitebar">
+  <a class="back" href="index.html">← Downloads</a>
+  <span class="name">AI ORCHESTRA WEB</span>
+  <a class="back" href="https://hero-999-dev.github.io/ai-orchestra-web/">https://hero-999-dev.github.io/ai-orchestra-web/</a>
+</div>
+<div class="wrap">
+<nav>
+  <div class="logo"><svg width="28" height="28" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="22" fill="#0b0e14"/><circle cx="50" cy="50" r="30" fill="none" stroke="#7dd3fc" stroke-width="4"/><circle cx="50" cy="50" r="11" fill="#60a5fa"/><circle cx="50" cy="20" r="6" fill="#34d399"/><circle cx="78.5" cy="40.7" r="6" fill="#34d399"/><circle cx="67.6" cy="74.3" r="6" fill="#34d399"/><circle cx="32.4" cy="74.3" r="6" fill="#f87171"/><circle cx="21.5" cy="40.7" r="6" fill="#34d399"/></svg>AI ORCHESTRA WEB</div>
+  <small>OVERVIEW</small>
+  <a href="#what">What it is</a><a href="#run">Run it</a><a href="#canvas">Canvas &amp; CLI chat</a><a href="#detect">CLI detection</a><a href="#flavours">Flavours</a><a href="#status">Status</a>
+  <small>DESIGN</small>
+  <a href="#arch">Architecture</a><a href="#roles">Agents & roles</a><a href="#routing">Routing</a><a href="#quota">Quota pools & Grok reserve</a><a href="#qa">QA & escalation</a><a href="#modes">Execution modes</a><a href="#safety">Permissions & limits</a><a href="#context">Context builder</a><a href="#tasks">Task model & events</a>
+  <small>CODE</small>
+  <a href="#repo">Repository map</a><a href="#interfaces">Core interfaces</a><a href="#api">Daemon API</a><a href="#config">Configuration</a><a href="#providers">Provider adapters</a><a href="#extend">How to extend</a>
+  <small>HANDOVER</small>
+  <a href="#tests">Tests</a><a href="#decisions">Decisions & trade-offs</a><a href="#next">Next steps</a><a href="#forai">Checklist for the next AI</a>
+</nav>
+<main>
+  <h1>AI Orchestra Web</h1>
+  <p class="lead">The long-form documentation site for <b>AI Orchestra</b> — a local-first AI workspace OS. Several AI CLIs and APIs run side by side across projects, delegate work through one orchestrator, are routed by role/cost/quota, and QA always goes through the <b>real test runner</b>. This page is self-contained. Download the Windows app from the <a href="index.html">v0.1.0 GitHub page</a>. Companions: <code>README.md</code>, <code>docs/ARCHITECTURE.md</code>, <code>log.md</code>, <code>test.md</code>, <code>memory.md</code>.</p>
+  <p><span class="pill ok">44 tests passing</span> <span class="pill ok">typecheck clean</span> <span class="pill ok">demo 1 passes offline</span> <span class="pill ok">Windows installers 0.1.0</span> <span class="pill run">phases 1–5 implemented</span> <span class="pill warn">phase 6 pending</span></p>
+
+  <h2 id="what">1. What it is, in one picture</h2>
+  <div class="layer"><div class="t">HUMAN DEVELOPER</div><div class="boxes"><span class="box">cockpit UI (browser) — projects · terminals · tasks · council · quota · routing log</span><span class="box">Orchestra.exe launcher</span></div></div>
+  <div class="arrow">▼ HTTP + WebSocket (loopback only)</div>
+  <div class="layer"><div class="t">DAEMON (apps/server) — composition root</div><div class="boxes"><span class="box core">Task Router</span><span class="box core">Agent Registry</span><span class="box core">Event Bus</span><span class="box core">Quota Manager</span><span class="box core">Permission Engine</span><span class="box core">Budget Guard</span><span class="box core">Task Service</span><span class="box core">QA · Orchestra · Ask · Council engines</span><span class="box">Context Builder</span><span class="box">Test Runner</span><span class="box">Git</span><span class="box">PTY Sessions</span><span class="box">SQLite</span></div></div>
+  <div class="arrow">▼ normalized <code>TaskRequest</code> / <code>TaskResult</code> through <code>AgentAdapter</code></div>
+  <div class="grid g3">
+    <div class="layer"><div class="t">CLI ADAPTERS (PTY / headless)</div><div class="boxes"><span class="box">Claude <span class="mut">claude -p</span></span><span class="box">Codex <span class="mut">codex exec --json</span></span><span class="box">Composer <span class="mut">agent --model composer</span></span><span class="box bad">Grok <span class="mut">agent --model grok</span></span><span class="box">custom CLI</span></div></div>
+    <div class="layer"><div class="t">API ADAPTERS</div><div class="boxes"><span class="box ok">Mistral <span class="mut">chat/completions → proposed edits</span></span></div></div>
+    <div class="layer"><div class="t">LOCAL TOOLS</div><div class="boxes"><span class="box">shell (PTY)</span><span class="box">git</span><span class="box">npm test / pytest / cargo test…</span></div></div>
+  </div>
+  <div class="arrow">▼</div>
+  <div class="layer" style="text-align:center">REAL PROJECT FILESYSTEM — the working tree and the test runner's exit code are the only sources of truth</div>
+
+  <h2 id="run">2. Run it</h2>
+  <div class="grid g2">
+    <div class="card"><h4>Windows installer (v0.1.0)</h4><p>Download from the <a href="index.html">GitHub page</a>: <code>Orchestra-Setup-0.1.0.exe</code> (daily driver) or <code>Test-Orchestra-Setup-0.1.0.exe</code> (amber test flavour with this page bundled). No Node install required. The packaged app runs the bundled daemon with Electron as Node and stores state in <code>%APPDATA%\Orchestra</code> or <code>%APPDATA%\Test Orchestra</code>.</p></div>
+    <div class="card"><h4>From source</h4><pre>npm run setup         # fresh clone: install + native scripts + Electron + UI build
+npm run app           # desktop app          npm run app:sim / npm run app:test
+npm run dist:win      # Orchestra installer    npm run dist:win:test
+npm run demo          # offline demo 1 (real git + real npm test, simulated models)
+npm test              # 44 tests, no paid calls
+npm run start:server  # daemon only, UI at http://localhost:7777 (browser fallback)</pre></div>
+  </div>
+  <h3>Canvas workspace (the main view)</h3>
+  <div class="grid g3">
+    <div class="card"><h4>CLI boxes</h4><p>One box per agent (Claude, Codex, Composer, Grok, shell, Mistral-headless). <b>Start</b> launches the real CLI as a PTY <i>inside the connected project folder</i> and embeds the terminal in the box — type there instead of a separate PowerShell. Boxes drag and resize; sizes/positions persist.</p></div>
+    <div class="card"><h4>Project diamonds</h4><p><b>+ Project folder</b> opens the native folder dialog (Electron) and auto-detects the test command. Hover for QA / change folder / remove; double-click to filter the task panel to that project.</p></div>
+    <div class="card"><h4>Connectors</h4><p>Drag a CLI's ● port onto a diamond, pick a role (Reasoning, Coding, Testing, Review, Shell or custom). The role label sits on the arrow; click it to change or remove. A CLI's first connection decides which folder its terminal starts in.</p></div>
+  </div>
+  <p class="mut">Persistence: <code>GET/POST /api/layout</code> → SQLite <code>kv</code> table. Classic view (sidebar + terminal grid) remains under the header toggle / View menu.</p>
+  <div class="callout info"><b>Installed here:</b> <code>claude</code> 2.1.282, <code>codex</code> 0.150.1, Cursor <code>agent</code> 2026.08.25. <b>Not present:</b> Mistral CLI/API key (set <code>MISTRAL_API_KEY</code>). Node 24, npm 11, no pnpm, no cargo. node-pty prebuilt binary works (ConPTY). Electron <b>44.7.0</b> (checked 2026-10-12 — matches latest npm).</div>
+
+  <h2 id="canvas">2b. Canvas — right-click, assign, chat</h2>
+  <div class="grid g3">
+    <div class="card"><h4>Right-click anywhere</h4><p>Empty canvas: <b>+ Add CLI here</b>, <b>+ Add project folder here</b>, place an existing project, <b>Re-detect installed CLIs</b>. On a CLI box: Assign task, Start/Stop session, connect to a project, remove. On a diamond: Run QA, Run Orchestra, show tasks, open folder, remove.</p></div>
+    <div class="card"><h4>Assign task…</h4><p>Modal on a CLI: pick the project, pick Solo / Orchestra / Ask, write the request. Solo forces that agent for a headless run. Orchestra forces that agent on the non-QA stages; QA stays Mistral-first. Ask is one question, no edits. Results land in the TASKS panel with the routing explanation.</p></div>
+    <div class="card"><h4>Chat inside the box</h4><p>A live session is a real xterm plus an input bar at the bottom of the box. Type a line and press Enter (or Send) — it is written to that PTY. You never need a separate terminal window for ordinary CLI chat.</p></div>
+  </div>
+  <p>Keyboard: <span class="kbd">Ctrl+O</span> add project · <span class="kbd">Ctrl+N</span> add CLI · <span class="kbd">F5</span> re-detect CLIs · <span class="kbd">Ctrl+Shift+S</span> stop all.</p>
+
+  <h2 id="detect">2c. CLI detection — install and uninstall stay in sync</h2>
+  <p><code>App.refreshHealth()</code> runs at startup and every 60 seconds (<code>POST /api/health/refresh</code> or Help / F5). Each configured provider is probed on PATH (Windows <code>.cmd</code> / <code>.ps1</code> shims included). Result:</p>
+  <ul class="tight">
+    <li>CLI found → agent <code>available=true</code>, box shows <code>installed · &lt;version&gt;</code>, Start is enabled.</li>
+    <li>CLI missing → agent <code>available=false</code>, box is dashed red with <b>missing on this computer</b>, Start is disabled, the router skips that agent. Re-install and the next refresh brings it back.</li>
+    <li>API providers (Mistral) stay listed even without a key so the UI can explain the failure.</li>
+  </ul>
+  <p class="mut">So a machine that only has Claude + a shell shows only those as startable. Uninstall Codex on that machine and the Codex box corrects itself — no manual registry edit.</p>
+
+  <h2 id="flavours">2d. Two flavours (v0.1.0)</h2>
+  <div class="grid g2">
+    <div class="card"><h4>Orchestra</h4><p>Product name <code>Orchestra</code>, cyan accent, full-colour logo, AppData <code>%APPDATA%\Orchestra</code>, app id <code>dev.hero999.orchestra</code>. This is the normal daily-use app you will keep shipping.</p></div>
+    <div class="card"><h4>Test Orchestra</h4><p>One-time 0.1.0 development build. Product name <code>Test Orchestra</code>, amber accent, faded logo (<code>assets/orchestra-test.*</code>), AppData <code>%APPDATA%\Test Orchestra</code>, app id <code>dev.hero999.orchestra.test</code>. Bundles this page plus <code>README.md</code>, <code>log.md</code>, <code>test.md</code>, <code>memory.md</code>, <code>docs/ARCHITECTURE.md</code> under <code>resources/docs</code> (Help → Open bundled docs). Install it beside the normal app on another computer without a clash.</p></div>
+  </div>
+  <p>Build: <code>npm run dist:win</code> / <code>npm run dist:win:test</code>. Dev: <code>electron . --test-flavor</code>. <code>ORCHESTRA_FLAVOR</code> is how the daemon and UI know which skin to use.</p>
+
+  <h2 id="status">3. Status against the brief</h2>
+  <table><tr><th>Phase</th><th>Scope</th><th>State</th></tr>
+  <tr><td>1</td><td>workspace/project manager, PTY terminals, CLI detection, Claude/Codex/Cursor/Mistral/shell adapters, basic UI</td><td><span class="pill ok">done</span></td></tr>
+  <tr><td>2</td><td>task system, message bus, agent registry, agent-to-agent messaging, Ask Agent</td><td><span class="pill ok">done</span></td></tr>
+  <tr><td>3</td><td>Orchestra mode, Mistral QA workflow, retry policy, Composer escalation, real test runner</td><td><span class="pill ok">done</span></td></tr>
+  <tr><td>4</td><td>quota pools, shared Cursor pool, Grok reserve rules, routing explanations</td><td><span class="pill ok">done</span></td></tr>
+  <tr><td>5</td><td>Council mode, round limits, consensus/summary, discussion UI</td><td><span class="pill ok">done (UI minimal)</span></td></tr>
+  <tr><td>6</td><td>project relationship graph context, worktrees, conflict management, workflow editor</td><td><span class="pill warn">pending — model &amp; schema exist</span></td></tr>
+  <tr><td>—</td><td>Electron desktop shell + canvas workspace (CLI boxes, project diamonds, role connectors, native folder picker, right-click, assign, in-box chat)</td><td><span class="pill ok">done</span></td></tr>
+  <tr><td>—</td><td>CLI detection loop (startup + 60s + F5); missing CLIs marked unavailable and skipped by the router</td><td><span class="pill ok">done</span></td></tr>
+  <tr><td>—</td><td>Windows installers (electron-builder NSIS) — Orchestra + Test Orchestra 0.1.0, no Node required</td><td><span class="pill ok">done</span></td></tr></table>
+
+  <h2 id="arch">4. Architecture</h2>
+  <p>Three packages with a strict dependency direction: <b>core</b> (pure TypeScript, no I/O, deterministic, fully unit-testable) ← <b>runtime</b> (Node side effects) ← <b>providers</b> (adapters). <code>apps/server</code> wires them; <code>apps/web</code> only talks to the daemon.</p>
+  <div class="grid g3">
+    <div class="card"><h4>packages/core</h4><p>types · events/bus · tasks (state machine, service) · routing/router · quota/quotaManager · permissions/engine · agents (adapter interface, registry) · orchestration (executor, qa, orchestra, askAgent, council, classifyFailure, limits) · config/defaults · testing (SimulatedAdapter, harness)</p></div>
+    <div class="card"><h4>packages/runtime</h4><p>process/exec · detect/cli (where/which, .ps1/.cmd shims) · terminal/sessionManager (node-pty → pipe fallback) · git/gitService · testing/testRunner · context/contextBuilder · fs/editApplier · persistence/db (node:sqlite) · secrets · config/loadConfig (YAML)</p></div>
+    <div class="card"><h4>packages/providers</h4><p>base/headlessCli (generic) · claude · codex · cursor (Composer &amp; Grok) · mistral (HTTP, proposed-edit protocol) · shell · <code>createAdapters()</code> factory (unknown CLIs → generic adapter; <code>simulate</code> → SimulatedAdapter)</p></div>
+  </div>
+  <h3>Why these choices</h3>
+  <ul class="tight">
+    <li><b>Core is pure.</b> Every decision (route, escalate, quota state, permission verdict, council stop) is a function of inputs plus an injected clock/ID generator → tests never touch a CLI or network.</li>
+    <li><b>Two channels per provider.</b> Interactive PTY for the human; headless print mode (<code>claude -p</code>, <code>codex exec</code>, <code>agent -p</code>, Mistral HTTP) for orchestration. No agent ever scrapes another agent's terminal.</li>
+    <li><b>Safety outside the LLM.</b> Permission engine, quota reserve and budget guard run in core on every attempt regardless of what any model says.</li>
+    <li><b>Electron desktop + loopback daemon</b> instead of Tauri (no cargo on this machine). Dev uses system Node + tsx; packaged mode runs <code>build/daemon/daemon.mjs</code> with <code>ELECTRON_RUN_AS_NODE=1</code>. node-pty 1.1.0 is N-API so installers set <code>npmRebuild: false</code>.</li>
+  </ul>
+
+  <h2 id="roles">5. Agents &amp; roles (defaults in <code>core/config/defaults.ts</code>)</h2>
+  <table><tr><th>Agent id</th><th>Provider</th><th>Roles</th><th>Pool</th><th>Flags</th></tr>
+  <tr><td><code>architect</code></td><td>claude</td><td>architecture, review, reasoning, planning</td><td>claude</td><td>can delegate</td></tr>
+  <tr><td><code>coder</code></td><td>codex</td><td>implementation, debugging, refactor</td><td>openai</td><td>can delegate</td></tr>
+  <tr><td><code>tester</code></td><td>mistral (API)</td><td>tests, qa, logs, edge_cases</td><td>mistral</td><td>maxAttempts 2 · returns <i>proposed edits</i></td></tr>
+  <tr><td><code>advanced_worker</code></td><td>composer (<code>agent --model composer-2.5</code>)</td><td>advanced_tests, code_fallback</td><td><b>cursor</b></td><td>automatic invocation allowed</td></tr>
+  <tr><td><code>reasoning_backup</code></td><td>grok (<code>agent --model grok-4.7-medium</code>)</td><td>reasoning_fallback, second_opinion</td><td><b>cursor</b></td><td><span class="pill bad">reserve agent</span> automatic invocation restricted</td></tr>
+  <tr><td><code>shell</code></td><td>powershell / $SHELL</td><td>shell</td><td>local</td><td>manual only</td></tr></table>
+
+  <h2 id="routing">6. Routing — explainable by construction</h2>
+  <p><code>TaskRouter.route(input)</code> evaluates every candidate agent in two passes and returns a <code>RoutingDecision</code> with per-candidate scores, reasons, and rejection causes. The UI prints the <code>summary</code> verbatim.</p>
+  <svg viewBox="0 0 1040 330" width="100%" style="background:var(--bg2);border:1px solid var(--line);border-radius:8px">
+    <defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8a94a8"/></marker></defs>
+    <rect x="20" y="20" width="200" height="60" rx="8" fill="#171d2b" stroke="#60a5fa"/><text x="120" y="45" fill="#d6deeb" text-anchor="middle" font-size="14">task: kind, complexity</text><text x="120" y="65" fill="#8a94a8" text-anchor="middle" font-size="12">override · justification · failed agents</text>
+    <line x1="220" y1="50" x2="270" y2="50" stroke="#8a94a8" marker-end="url(#a)"/>
+    <rect x="270" y="20" width="250" height="150" rx="8" fill="#171d2b" stroke="#f87171"/><text x="395" y="42" fill="#f87171" text-anchor="middle" font-size="13" font-weight="700">HARD FILTERS (safety)</text>
+    <text x="285" y="66" fill="#d6deeb" font-size="12">✗ excluded by user / already failed task</text>
+    <text x="285" y="86" fill="#d6deeb" font-size="12">✗ agent unavailable (auth failure)</text>
+    <text x="285" y="106" fill="#d6deeb" font-size="12">✗ quota pool exhausted (even if forced)</text>
+    <text x="285" y="126" fill="#d6deeb" font-size="12">✗ reserve agent without justification</text>
+    <text x="285" y="146" fill="#d6deeb" font-size="12">✗ reserve agent for test/lint/log kinds</text>
+    <text x="285" y="166" fill="#d6deeb" font-size="12">✗ non-reserve agent while pool in reserve region</text>
+    <line x1="520" y1="95" x2="570" y2="95" stroke="#8a94a8" marker-end="url(#a)"/>
+    <rect x="570" y="20" width="250" height="150" rx="8" fill="#171d2b" stroke="#34d399"/><text x="695" y="42" fill="#34d399" text-anchor="middle" font-size="13" font-weight="700">SCORE</text>
+    <text x="585" y="68" fill="#d6deeb" font-size="12" font-family="monospace">+ roleMatch × 4</text>
+    <text x="585" y="86" fill="#d6deeb" font-size="12" font-family="monospace">+ capability × 2  + history × 1</text>
+    <text x="585" y="104" fill="#d6deeb" font-size="12" font-family="monospace">+ availability × 2</text>
+    <text x="585" y="122" fill="#d6deeb" font-size="12" font-family="monospace">− quotaPressure × 3  − cost × 1</text>
+    <text x="585" y="140" fill="#d6deeb" font-size="12" font-family="monospace">− latency × 0.5  − reserve × 6</text>
+    <text x="585" y="158" fill="#8a94a8" font-size="11">unknown quota counts as moderate pressure</text>
+    <line x1="820" y1="95" x2="870" y2="95" stroke="#8a94a8" marker-end="url(#a)"/>
+    <rect x="870" y="50" width="150" height="90" rx="8" fill="#171d2b" stroke="#7dd3fc"/><text x="945" y="80" fill="#7dd3fc" text-anchor="middle" font-size="13" font-weight="700">RoutingDecision</text><text x="945" y="100" fill="#8a94a8" text-anchor="middle" font-size="11">selected · candidates[]</text><text x="945" y="116" fill="#8a94a8" text-anchor="middle" font-size="11">summary[] (why / why not)</text>
+    <rect x="20" y="200" width="1000" height="110" rx="8" fill="#0b0e14" stroke="#263044"/>
+    <text x="35" y="222" fill="#8a94a8" font-size="11" letter-spacing="1.5">EXAMPLE — task: fix failing async integration test, Mistral already failed twice</text>
+    <text x="35" y="246" fill="#34d399" font-size="12" font-family="monospace">Selected: advanced_worker   + role match high  + cost medium  + quota pool "cursor" healthy (reserve 40%)</text>
+    <text x="35" y="266" fill="#8a94a8" font-size="12" font-family="monospace">- coder: score 4.55 &lt; 7.8</text>
+    <text x="35" y="286" fill="#f87171" font-size="12" font-family="monospace">- reasoning_backup: protected reasoning reserve (no justification)      - tester: already failed this task</text>
+  </svg>
+  <h3>Reserve justifications (the only keys that make Grok eligible automatically)</h3>
+  <div class="boxes"><span class="box">primary_unavailable</span><span class="box">primary_quota_constrained</span><span class="box">user_requested</span><span class="box">reasoning_hard</span><span class="box">second_opinion</span><span class="box">primary_disagreement</span></div>
+  <p class="mut">Even with a justification, Grok is rejected for <code>generate_tests, fix_tests, qa, lint, format, analyze_logs, shell</code> unless the user forces it. A forced agent still cannot bypass an <b>exhausted</b> pool.</p>
+
+  <h2 id="quota">7. Quota pools &amp; the Cursor reserve</h2>
+  <div class="pool">
+    <div class="card"><h4>Pools</h4><table><tr><th>pool</th><th>agents</th><th>source</th></tr><tr><td>claude</td><td>architect</td><td>local estimate (budget 200)</td></tr><tr><td>openai</td><td>coder</td><td>local estimate (budget 200)</td></tr><tr><td>mistral</td><td>tester</td><td>token-based estimate (budget 1000)</td></tr><tr><td><b>cursor</b></td><td><b>advanced_worker + reasoning_backup</b></td><td>local estimate (budget 100) · reserve 0.40</td></tr></table></div>
+    <div class="card"><h4>Cursor pool model</h4><p>Composer calls debit the same pool Grok needs. When remaining ≤ 40 % the pool state becomes <b>reserved</b>: Composer loses automatic eligibility (QA falls back to Codex), Grok keeps it.</p>
+      <div class="bar"><div class="fill" style="width:62%"></div><div class="res"></div></div>
+      <p style="margin-top:6px"><span class="mut">used by Composer ─────────▶</span> <span style="color:var(--bad)">◀── 40 % protected for Grok</span></p>
+      <p style="margin-top:8px">State ladder: <code>unknown → healthy → moderate → low → reserved → exhausted</code>. Sources: provider-reported fraction &gt; user budget + usage counters &gt; qualitative state set by user or inferred from a <code>quota_failure</code>. Unknown is never faked as a number.</p></div>
+  </div>
+
+  <h2 id="qa">8. QA workflow &amp; escalation (<code>core/orchestration/qa.ts</code>)</h2>
+  <div class="flow">
+    <div class="step"><b>1 · context</b>git diff + changed files + nearby tests (+ failing output on retry) — ~1 KB in the demo, never the repo</div>
+    <div class="step"><b>2 · Mistral attempt 1</b>proposed edits applied only under permission scope (<code>tests/**</code>)</div>
+    <div class="step"><b>3 · real runner</b><code>project.commands.test</code>; exit code decides</div>
+    <div class="step"><b>4 · Mistral attempt 2</b>receives the actual failing output</div>
+    <div class="step"><b>5 · classify</b><code>classifyFailure()</code> → code_or_test · infrastructure · reasoning · unknown</div>
+    <div class="step"><b>6 · escalate once</b>code/infra → <b>Composer</b> (or Codex if cursor reserved) · reasoning → <b>Claude</b> · never Grok</div>
+    <div class="step"><b>7 · runner again</b>pass → completed · fail → <span class="pill bad">failed</span>, human review</div>
+  </div>
+  <div class="callout"><b>Hard failures</b> (quota, auth, crash, timeout) skip the retry and escalate immediately; a <code>quota_failure</code> marks the pool exhausted, an <code>authentication_failure</code> marks the agent unavailable. <b>Budget guard</b> stops the chain at <code>max_agent_calls</code> / <code>max_cursor_usage</code> / runtime.</div>
+  <h3>Compact QA report (what the lead agent and UI see)</h3>
+  <pre>QA RESULT
+
+tester:
+- attempt completed: generated 3 tests for clamp (edge cases …) -> 4 / 5 tests passed, 1 failed
+- attempt completed: adjusted expectation for above-max case -> 4 / 5 tests passed, 1 failed
+
+advanced_worker escalation (code_or_test):
+- assertion or runtime error in test/code interaction
+- SUMMARY: fixed above-max expectation (clamp returns max), added below-min case
+
+Final verification:
+6 / 6 tests passed
+
+Changed test files:
+- tests/clamp.test.js</pre>
+
+  <h2 id="modes">9. Execution modes</h2>
+  <div class="grid g4">
+    <div class="card"><h4>Solo</h4><p>One task, one agent (auto-routed or forced). <code>App.solo()</code> → <code>POST /api/solo</code>.</p></div>
+    <div class="card"><h4>Orchestra</h4><p>Workflow stages (plan → implementation → qa → final_review). Each stage is a child task routed normally; QA stages delegate to the QA workflow; stage summaries (not raw logs) flow forward. <code>runOrchestra()</code>.</p></div>
+    <div class="card"><h4>Council</h4><p>Bounded rounds; every participant is a routed task (reserve rules apply, Grok as participant = second_opinion). Stops on <code>[CONSENSUS]</code> from all, max rounds/messages/calls, timeout or user stop. Ends with a structured JSON summary (decision, reasoning, disagreements, risks, implementation, testing). <code>runCouncil()</code>.</p></div>
+    <div class="card"><h4>Ask Agent</h4><p>One focused question, no file edits, answer returned over the bus. Asking a reserve agent requires a justification. <code>askAgent()</code>.</p></div>
+  </div>
+
+  <h2 id="safety">10. Permissions, concurrency, limits</h2>
+  <div class="grid g2">
+    <div class="card"><h4>Permission engine</h4><table><tr><td>read / search / diff / run tests / lint / create test / modify scoped source / shell</td><td><span class="pill ok">allow</span></td></tr><tr><td>modify unscoped source · install dependency · delete · git commit · git push</td><td><span class="pill warn">ask</span></td></tr><tr><td>force push · deploy production · drop database · destructive shell</td><td><span class="pill bad">deny</span></td></tr></table><p>Rules layer workspace → project → agent → mode; most specific wins; a base-level <b>deny</b> is never relaxed. <code>classifyShellCommand()</code> maps raw commands (<code>rm -rf</code>, <code>git push -f</code>, <code>DROP TABLE</code>, <code>terraform apply</code>, <code>npm install x</code>…) to actions deterministically. <b>ask</b> → <code>permission.requested</code> event → UI Approve/Deny (default deny after 10 min).</p></div>
+    <div class="card"><h4>Limits &amp; kill switches</h4><p><code>BudgetGuard</code> per workflow: max_agent_calls 12, max_retries 2, max_council_rounds 4, max_cursor_usage 6, max_reasoning_agents 2, max_runtime 30 min. <b>STOP ALL AGENTS</b> aborts every run, cancels open tasks, kills agent terminals. Per-task stop in the task list.</p><p style="margin-top:8px"><b>Edits:</b> API agents return <code>proposedEdits</code>; the applier refuses path traversal and consults the permission engine per path. CLI agents edit directly; changed files are read back from <code>git status</code>, never from the model's claims.</p><p style="margin-top:8px"><b>Concurrency (pending, Phase 6):</b> per-file task locks and worktrees. Today the UI shows one project at a time per workflow; runs can overlap but there is no lock yet.</p></div>
+  </div>
+
+  <h2 id="context">11. Context builder (<code>runtime/context/contextBuilder.ts</code>)</h2>
+  <p>Builds a <code>ContextBundle</code> = git diff (relative to the project dir, nested repos supported) + changed source files (≤12, ≤12 KB each) + nearby tests (same dir, <code>__tests__</code>, <code>tests/</code>, name-related, ≤6) + failing output + previous summary; binary/noise paths (<code>.sqlite</code>, lockfiles, images) are filtered; total budget 120 KB with graceful trimming. <code>renderContext()</code> turns it into prompt text for single-prompt CLIs.</p>
+
+  <h2 id="tasks">12. Task model &amp; events</h2>
+  <div class="grid g2">
+    <div class="card"><h4>Task state machine</h4><pre style="margin:0">queued → running → testing → completed
+   │        │   ↑        │
+   │        │   │        └→ failed → queued (retry / escalation)
+   │        ↓   │
+   │     waiting / blocked / review
+   └→ cancelled (any non-terminal state)</pre><p>Illegal transitions throw. Task records: attempts (agent, outcome, failure, testResult), escalations, routing decisions, usage per pool, changed files, notes.</p></div>
+    <div class="card"><h4>Event families (typed, in <code>core/types/events.ts</code>)</h4><p><code>workspace.* project.* agent.{started,stopped,message,failure} task.{created,assigned,started,status,completed,failed,escalated,cancelled,updated} test.{started,completed,failed} file.changed git.diff.updated git.conflict quota.{updated,low,reserved,exhausted} council.{started,round,completed} permission.{requested,approved,denied} routing.decided terminal.{started,data,exit} orchestra.log kill.all</code></p><p style="margin-top:6px">Every event is persisted to SQLite (except <code>terminal.data</code>) and broadcast on the WebSocket; the UI is a pure consumer.</p></div>
+  </div>
+
+  <h2 id="repo">13. Repository map</h2>
+  <pre>Orchestra/
+├─ Orchestra.exe                 repo launcher (tools/launcher) — still useful in-dev
+├─ orchestra.config.yaml         workspace config (projects, pools, QA policy, limits …)
+├─ README.md · log.md · test.md · memory.md
+├─ docs/                          index.html (GitHub download) · handover.html (this page) · ARCHITECTURE.md
+├─ assets/                        orchestra.png/.ico + orchestra-test.png/.ico
+├─ apps/
+│  ├─ desktop/     main.cjs (Electron: daemon, window, menu, folder picker, flavours) · preload.cjs
+│  ├─ server/src/  app.ts · http.ts · main.ts · demo.ts
+│  └─ web/src/     App.tsx · Canvas.tsx · Terminal.tsx · api.ts · styles.css
+├─ packages/ {core, runtime, providers}
+├─ examples/sample-repo/          tiny Node project used by the demo
+├─ tools/build/                   bundle-daemon.mjs · dist.mjs (electron-builder)
+└─ release/{normal,test}/         Orchestra-Setup-0.1.0.exe · Test-Orchestra-Setup-0.1.0.exe</pre>
+
+  <h2 id="interfaces">14. Core interfaces</h2>
+  <pre>interface AgentAdapter {
+  providerId; type: 'cli'|'api'|'local';
+  capabilities(): Capability[];
+  healthCheck(): Promise&lt;HealthStatus&gt;;
+  startSession?(opts): Promise&lt;TerminalHandle&gt;;                       // interactive PTY
+  sendTask(req: TaskRequest, ctx: ContextBundle, signal): Promise&lt;TaskResult&gt;; // headless
+  cancelTask(taskId): Promise&lt;void&gt;;
+  parseOutput(raw): ParsedOutput;                                      // provider JSON → normalized
+}
+interface OrchestrationDeps { bus; tasks; registry; quota; permissions; router;
+  testRunner: TestRunner; context: ContextProvider; edits: EditApplier; projects: ProjectProvider;
+  prompter?: PermissionPrompter; qaPolicy; limits; clock; ids }
+runQaWorkflow(deps, opts) → QaReport      runOrchestra(deps, opts) → OrchestraResult
+runCouncil(deps, opts) → CouncilThread    askAgent(deps, opts) → AskAgentResult
+executeAttempt(deps, {task, agentId, project, ctx, description, writeScope, guard, signal})</pre>
+
+  <h2 id="api">15. Daemon API (<code>apps/server/src/http.ts</code>)</h2>
+  <table><tr><th>Method · path</th><th>Purpose</th></tr>
+  <tr><td><code>GET /api/state</code></td><td>projects, agents, providers, sessions, tasks, quota, pending permissions, workflows, limits, running workflows</td></tr>
+  <tr><td><code>GET /api/health</code> · <code>POST /api/health/refresh</code></td><td>per-provider install/auth/version; refresh also syncs agent <code>available</code> flags</td></tr>
+  <tr><td><code>GET/POST /api/layout</code></td><td>canvas nodes + links (SQLite <code>kv</code>)</td></tr>
+  <tr><td><code>GET /api/events?limit&amp;types</code></td><td>persisted event history</td></tr>
+  <tr><td><code>POST /api/projects</code> · <code>DELETE /api/projects/:id</code> · <code>GET /api/projects/:id/changes</code></td><td>project CRUD (auto-detects test/build/lint from package.json, pyproject, Cargo.toml, go.mod); working-tree changes + diff</td></tr>
+  <tr><td><code>POST /api/sessions</code> · <code>DELETE /api/sessions/:id</code> · <code>…/scrollback</code> · <code>…/resize</code> · <code>…/input</code></td><td>PTY lifecycle (streaming over WS: <code>terminal.data</code>, client → <code>terminal.input</code>/<code>terminal.resize</code>)</td></tr>
+  <tr><td><code>GET /api/tasks[/:id]</code> · <code>POST /api/tasks/:id/cancel</code></td><td>task view and per-task stop</td></tr>
+  <tr><td><code>POST /api/qa</code> · <code>/orchestra</code> · <code>/council</code> · <code>/solo</code></td><td>long-running workflows; return <code>{started:true}</code>, progress streams as events. Body supports <code>force</code>, <code>skipQa</code>, <code>noEscalate</code>, <code>workflow</code>, <code>participants</code>, <code>maxRounds</code></td></tr>
+  <tr><td><code>POST /api/ask</code></td><td>synchronous single question (<code>to</code>, <code>question</code>, optional <code>justification</code>)</td></tr>
+  <tr><td><code>POST /api/shell</code></td><td>permission-checked one-shot command in a project</td></tr>
+  <tr><td><code>POST /api/quota/:pool {state}</code> · <code>POST /api/agents/:id/availability</code></td><td>user-set qualitative quota state; mark agent unavailable</td></tr>
+  <tr><td><code>POST /api/permissions/:requestId {approve}</code></td><td>resolve an <i>ask</i> prompt</td></tr>
+  <tr><td><code>POST /api/stop-all</code></td><td>global kill switch</td></tr></table>
+
+  <h2 id="config">16. Configuration (<code>orchestra.config.yaml</code>)</h2>
+  <p>Keys follow the brief: <code>providers</code>, <code>agents</code>, <code>quota_pools</code>, <code>projects</code>, <code>workflows</code>, <code>qa_policy</code>, <code>permissions</code>, <code>limits</code>, <code>secrets</code>. Everything merges over <code>defaultWorkspaceConfig()</code>. Secrets: env var first, else a configured command (1Password, pass, …); nothing is written to disk. Env flags: <code>ORCHESTRA_SIMULATE=1</code>, <code>ORCHESTRA_PORT</code>, <code>ORCHESTRA_CONFIG</code>, <code>ORCHESTRA_AUTO_QA=1</code> (auto-QA 20 s after the working tree settles while an agent terminal is open), <code>ORCHESTRA_HOST</code> (default loopback).</p>
+
+  <h2 id="providers">17. Provider adapters — what each one actually runs</h2>
+  <table><tr><th>Provider</th><th>Headless invocation</th><th>Output parsed</th><th>Failure mapping</th></tr>
+  <tr><td>Claude</td><td><code>claude -p "&lt;prompt&gt;" --output-format json --permission-mode acceptEdits</code></td><td><code>{type:"result", result, is_error, usage}</code> → summary from <code>SUMMARY:</code> line, units ≈ tokens/10k</td><td>is_error + text → quota/auth/tool</td></tr>
+  <tr><td>Codex</td><td><code>codex exec --json --skip-git-repo-check --sandbox workspace-write "&lt;prompt&gt;"</code></td><td>JSONL: <code>item.completed</code> (agent_message, file_change), <code>turn.completed</code> usage, <code>error</code></td><td>error text → quota/auth/tool</td></tr>
+  <tr><td>Cursor (Composer, Grok)</td><td><code>agent -p --output-format json --trust [--force] --model &lt;m&gt; "&lt;prompt&gt;"</code> (resolved through the <code>.ps1</code> shim on Windows)</td><td>result object or stream-json assistant text</td><td>is_error + text</td></tr>
+  <tr><td>Mistral</td><td><code>POST /v1/chat/completions</code> with a system prompt demanding one JSON block <code>{summary, edits[], notes[]}</code></td><td>edits → <code>proposedEdits</code> (applied by the runtime under permissions)</td><td>401/403 auth · 429/402 quota · malformed JSON → malformed_output</td></tr>
+  <tr><td>Shell</td><td>PTY session, or one-shot command (description = command)</td><td>exit code + output</td><td>permission engine authorizes before running</td></tr></table>
+  <div class="callout"><b>Not yet exercised against live models.</b> Flag sets were taken from each CLI's <code>--help</code> on this machine; run one real task per provider (<code>POST /api/ask</code> is the cheapest) and adjust <code>parseOutput()</code> if the JSON shape differs. Changed files are detected from git either way.</div>
+
+  <h2 id="extend">18. How to extend</h2>
+  <div class="grid g3">
+    <div class="card"><h4>Add a custom CLI</h4><pre style="margin:0">providers:
+  my_ai:
+    type: cli
+    command: my-ai
+    args: ["--interactive"]
+    capabilities: [implementation]
+    quota_pool: my_pool
+    headless:
+      args: ["--print"]
+      prompt_via: arg
+agents:
+  helper:
+    provider: my_ai
+    role: [implementation]
+quota_pools:
+  my_pool: { agents: [helper] }</pre><p>No code needed: <code>createAdapter()</code> gives unknown CLIs the generic <code>HeadlessCliAdapter</code>. Override <code>parseOutput()</code> in a subclass for custom JSON.</p></div>
+    <div class="card"><h4>Add a workflow</h4><pre style="margin:0">workflows:
+  bugfix:
+    mode: orchestra
+    lead: architect
+    stages:
+      - { name: diagnose, agent: architect, kind: plan }
+      - { name: fix, agent: coder, kind: fix_bug }
+      - { name: qa, agent: tester, kind: generate_tests }</pre><p>Stage kinds drive routing weights; <code>agent: auto</code> lets the router choose.</p></div>
+    <div class="card"><h4>Change policy</h4><p><code>qa_policy</code> picks the primary tester and escalation targets; <code>limits</code> cap calls/rounds/cursor usage; <code>permissions</code> can be scoped per agent/project/mode. Router weights live in <code>ROLE_WEIGHTS</code> / <code>W</code> in <code>router.ts</code> with tests in <code>router.test.ts</code> — change both together.</p></div>
+  </div>
+
+  <h2 id="tests">19. Tests (details in <code>test.md</code>)</h2>
+  <table><tr><th>File</th><th>Covers</th><th>#</th></tr>
+  <tr><td><code>core/orchestration/qa.test.ts</code></td><td>first-pass success, never-trust-the-agent retry, Composer escalation (Grok untouched), reasoning → Claude, cursor reserved → Codex fallback, no further hops, do-not-escalate, permission-scoped edits, quota hard failure, budget guard</td><td>10</td></tr>
+  <tr><td><code>core/routing/router.test.ts</code></td><td>Mistral for tests with explanation, Claude for hard reasoning, Grok only when primaries down + justified, never routine work for Grok, user force, forced ≠ exhausted pool, reserve region blocks Composer, shared-pool debit</td><td>8</td></tr>
+  <tr><td><code>core/orchestration/modes.test.ts</code></td><td>Orchestra demo 2 (plan→impl→QA→review), QA escalation inside orchestra, skipQa/force; Ask Agent happy path + Grok refusal/justification; Council consensus, max rounds, user interrupt</td><td>8</td></tr>
+  <tr><td><code>core/permissions/engine.test.ts</code></td><td>defaults, specificity vs. deny, destructive shell classifier, state machine, failure classifier, scope globs</td><td>6</td></tr>
+  <tr><td><code>runtime/runtime.test.ts</code></td><td>summary parsers, SQLite round-trip, edit applier traversal guard, real test runner with <code>node --test</code>, exec timeout, YAML mapping</td><td>6</td></tr>
+  <tr><td><code>providers/providers.test.ts</code></td><td>Claude/Codex/Cursor/Mistral fixtures, Mistral HTTP with mocked fetch (429, 200), auth/quota text classifier</td><td>6</td></tr></table>
+  <p>Plus <code>npm run demo</code> (end-to-end, offline) and the browser smoke test recorded in <code>test.md</code>.</p>
+
+  <h2 id="decisions">20. Decisions &amp; trade-offs</h2>
+  <ul class="tight">
+    <li><b>npm workspaces, not pnpm</b> — pnpm absent; nothing in the design depends on it.</li>
+    <li><b>Source exports (<code>exports: ./src/index.ts</code>)</b> — tsx/vitest/Vite consume TS directly; no build step for packages. Add <code>tsc</code> emit before publishing anything.</li>
+    <li><b>node:sqlite</b> — zero native build; WAL mode; JSON columns for nested structures.</li>
+    <li><b>node-pty with pipe fallback</b> — install scripts needed <code>npm approve-scripts</code> (npm 11 gate); the launcher does this on first run. Windows kill goes through <code>taskkill /T</code> to avoid node-pty's console-list helper.</li>
+    <li><b>Mistral proposed-edit protocol</b> — API models cannot touch disk; the orchestrator applies edits through the permission engine, which also gives a clean audit trail.</li>
+    <li><b>Git as the change oracle</b> — changed files come from <code>git status</code> before/after each CLI run; nested project directories handled with <code>--show-prefix</code> / <code>--relative</code>.</li>
+    <li><b>Core packages consolidated</b> — the brief's dozen packages are directories inside <code>core</code>; split later if they diverge.</li>
+  </ul>
+
+  <h2 id="next">21. Next steps (ordered)</h2>
+  <ol>
+    <li>Live-validate each adapter with one <code>/api/ask</code> call; tune <code>parseOutput()</code> and headless flags.</li>
+    <li>Phase 6a: per-file task locks + <code>git.conflict</code> events; 6b: branch-per-agent / worktree option in <code>executeAttempt</code>.</li>
+    <li>Phase 6c: cross-project context — <code>relatedProjects</code> is modeled; add <code>ContextBuilder.related()</code> (routes/schemas/diff of the related repo).</li>
+    <li>Workflow editor in the UI (workflows are plain YAML objects already served in <code>/api/state</code>).</li>
+    <li>Use canvas connections as routing hints (e.g. restrict a project's QA to the agents connected with the Testing role).</li>
+    <li>Historical success rates feeding the router (<code>history</code> input exists; persist from task outcomes).</li>
+    <li>Live-validate each adapter on the second machine with Test Orchestra; tune <code>parseOutput()</code> if a CLI's JSON shape drifted.</li>
+    <li>macOS / Linux electron-builder targets when those machines exist.</li>
+  </ol>
+
+  <h2 id="forai">22. Checklist for the next AI taking over</h2>
+  <div class="ai">
+    <ol>
+      <li>Read <code>README.md</code>, this page, <code>docs/ARCHITECTURE.md</code>, <code>memory.md</code> (release checklist — always check Electron). Then <code>log.md</code> and <code>test.md</code>.</li>
+      <li>Run <code>npm test</code> (expect 44 green), <code>npm run demo</code> (expect <code>DEMO 1: PASS</code>, <code>Grok calls: 0</code>).</li>
+      <li>Non-negotiable invariants (tests enforce them — keep them green): real test runner decides QA; Mistral first, two attempts; Composer is the QA escalation; Grok is never an automatic QA target and needs a justification; Composer + Grok share the <code>cursor</code> pool with a 40 % reserve; every route carries an explanation; permissions/limits are enforced in core, not by prompts; API agents only write through <code>EditApplier</code>.</li>
+      <li>Provider-specific code goes only in <code>packages/providers</code>. New decisions go in <code>packages/core</code> with a test in the same folder.</li>
+      <li>Append to <code>log.md</code> and <code>test.md</code> at the end of each session. Every version bump: check Electron (<code>npm view electron version</code>), then <code>npm run dist:win</code> and <code>npm run dist:win:test</code>, then update download links on <code>docs/index.html</code>.</li>
+      <li>Never commit secrets; never require paid model calls in tests (<code>SimulatedAdapter</code> + <code>createHarness()</code>).</li>
+    </ol>
+  </div>
+  <p class="mut" style="margin-top:40px">AI Orchestra Web · updated 2026-10-12 for v0.1.0. Self-contained; no network resources. <a href="index.html">← back to downloads</a></p>
+</main>
+</div>
+</body>
+</html>
