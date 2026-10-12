@@ -71,14 +71,19 @@ async function enter() {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('orchestra:' + pass));
   const hex = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
   const dir = 'p-' + hex.slice(0, 20) + '/';
-  if (location.protocol === 'file:') { location.href = dir; return; }
+  let opened = false;
   try {
-    const r = await fetch(dir + 'index.html', { method: 'HEAD', cache: 'no-store' });
-    if (r.ok) { location.href = dir; return; }
+    const r = await fetch(dir + 'index.html', { cache: 'no-store' });
+    const text = await r.text();
+    opened = r.ok && text.includes('name="orchestra-page" content="download"');
   } catch (e) {}
+  if (opened) { location.href = dir; return; }
   msg.style.color = 'var(--bad)';
-  msg.textContent = 'Wrong password.';
+  msg.textContent = 'Hatalı girdiniz, tekrar giriniz.';
   go.disabled = false;
+  const pw = document.getElementById('pw');
+  pw.focus();
+  pw.select();
 }
 document.getElementById('go').addEventListener('click', enter);
 document.getElementById('pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') enter(); });
