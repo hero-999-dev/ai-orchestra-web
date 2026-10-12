@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Orchestra — download v0.1.0</title>
+<meta name="description" content="Local-first multi-agent development OS. Download Orchestra 0.1.0 for Windows — canvas of live AI CLIs, quota-aware routing, real test-runner QA." />
+<link rel="icon" href="orchestra.png" />
+<style>
+  :root {
+    --bg: #07090f;
+    --bg2: #0e1320;
+    --bg3: #151c2c;
+    --line: #273149;
+    --fg: #e6edf7;
+    --muted: #8b96ad;
+    --ok: #34d399;
+    --bad: #f87171;
+    --warn: #fbbf24;
+    --run: #60a5fa;
+    --accent: #7dd3fc;
+    --amber: #f5c16c;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--fg);
+    font: 16px/1.55 "Segoe UI", Inter, system-ui, sans-serif;
+    background:
+      radial-gradient(900px 480px at 12% -10%, rgba(125, 211, 252, .14), transparent 55%),
+      radial-gradient(700px 420px at 92% 8%, rgba(251, 191, 36, .08), transparent 50%),
+      linear-gradient(180deg, #0b101a 0%, var(--bg) 220px);
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+  header.nav {
+    display: flex; align-items: center; gap: 18px;
+    padding: 18px 0 10px;
+  }
+  header.nav .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 750; letter-spacing: 2.4px; color: var(--accent);
+  }
+  header.nav .brand img { width: 34px; height: 34px; }
+  header.nav nav { margin-left: auto; display: flex; gap: 18px; font-size: 14px; }
+  header.nav nav a { color: var(--muted); text-decoration: none; }
+  header.nav nav a:hover { color: var(--fg); }
+  .hero { padding: 54px 0 28px; display: grid; grid-template-columns: 1.05fr .95fr; gap: 42px; align-items: center; }
+  .kicker { color: var(--accent); letter-spacing: 3px; font-size: 11px; font-weight: 700; }
+  h1 { font-size: clamp(36px, 5.4vw, 56px); line-height: 1.05; margin: 10px 0 14px; letter-spacing: -0.4px; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .lead { color: var(--muted); font-size: 18px; max-width: 540px; margin: 0 0 22px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 16px; font-weight: 650; text-decoration: none;
+    color: var(--fg); background: var(--bg3);
+  }
+  .btn:hover { border-color: var(--accent); text-decoration: none; }
+  .btn.primary { background: #16324c; border-color: #2d6ea3; }
+  .btn.amber { background: #3a2d12; border-color: #8a6a22; color: #fde68a; }
+  .btn.ghost { background: transparent; }
+  .ver { color: var(--muted); font-size: 13px; }
+  .stage {
+    background: linear-gradient(180deg, #121a2a, #0c1220);
+    border: 1px solid var(--line); border-radius: 16px;
+    padding: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.35);
+  }
+  .stage svg { width: 100%; height: auto; display: block; }
+  section { padding: 36px 0; }
+  h2 { font-size: 28px; margin: 0 0 8px; letter-spacing: -.4px; }
+  .sub { color: var(--muted); margin: 0 0 22px; }
+  .grid { display: grid; gap: 14px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .card {
+    background: var(--bg2); border: 1px solid var(--line);
+    border-radius: 14px; padding: 18px 18px 16px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .card.normal { border-color: #2d6ea3; }
+  .card.test { border-color: #8a6a22; }
+  .card .meta { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+  .pill.ok { color: var(--ok); border-color: #1f6b4d; }
+  .pill.warn { color: var(--warn); border-color: #7a6020; }
+  .dl { margin-top: 16px; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .step { background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .step b { display: block; color: var(--accent); font-size: 12px; letter-spacing: 1px; margin-bottom: 6px; }
+  footer { border-top: 1px solid var(--line); padding: 22px 0 40px; color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  @media (max-width: 900px) {
+    .hero, .g2, .g3, .steps { grid-template-columns: 1fr; }
+    header.nav { flex-wrap: wrap; }
+    header.nav nav { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="nav">
+      <div class="brand"><img src="orchestra.png" alt="" />AI ORCHESTRA</div>
+      <nav>
+        <a href="#download">Download</a>
+        <a href="#features">Features</a>
+        <a href="handover.html">AI Orchestra Web</a>
+        <a href="https://hero-999-dev.github.io/ai-orchestra-web/">GitHub Pages</a>
+        <a href="https://github.com/hero-999-dev/ai-orchestra">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="hero">
+      <div>
+        <div class="kicker">LOCAL-FIRST · WINDOWS · v0.1.0</div>
+        <h1>One desk for<br>every <em>AI CLI</em>.</h1>
+        <p class="lead">Orchestra is a desktop workspace OS: live Claude / Codex / Cursor / shell sessions on a canvas, connected to project folders, routed by role, cost and quota. QA is decided by the real test runner — never by a model claiming “it passed”.</p>
+        <div class="cta">
+          <a class="btn primary" href="https://github.com/hero-999-dev/ai-orchestra/releases/download/v0.1.0/Orchestra-Setup-0.1.0.exe">Download Orchestra 0.1.0</a>
+          <a class="btn ghost" href="handover.html">Open AI Orchestra Web →</a>
+        </div>
+        <p class="ver">Windows NSIS installer · Electron 44.7.0 · no Node required on the target machine</p>
+        <p class="ver"><a href="https://hero-999-dev.github.io/ai-orchestra-web/">https://hero-999-dev.github.io/ai-orchestra-web/</a></p>
+      </div>
+      <div class="stage" aria-hidden="true">
+        <svg viewBox="0 0 640 400">
+          <rect x="8" y="8" width="624" height="384" rx="14" fill="#0b0e14" stroke="#273149"/>
+          <text x="28" y="36" fill="#7dd3fc" font-size="13" font-weight="700" letter-spacing="2">ORCHESTRA</text>
+          <text x="128" y="36" fill="#8b96ad" font-size="11">canvas · v0.1.0</text>
+          <rect x="28" y="58" width="210" height="118" rx="8" fill="#111622" stroke="#34d399" stroke-width="2"/>
+          <text x="42" y="82" fill="#e6edf7" font-size="13" font-weight="700">Claude</text>
+          <text x="92" y="82" fill="#8b96ad" font-size="11">live · pid 4412</text>
+          <text x="42" y="108" fill="#34d399" font-size="11" font-family="Consolas,monospace">&gt; implement rate limit</text>
+          <text x="42" y="126" fill="#8b96ad" font-size="11" font-family="Consolas,monospace">cwd project-a</text>
+          <rect x="28" y="198" width="210" height="90" rx="8" fill="#111622" stroke="#d6deeb" stroke-width="2"/>
+          <text x="42" y="222" fill="#e6edf7" font-size="13" font-weight="700">Codex</text>
+          <text x="42" y="248" fill="#8b96ad" font-size="11">installed · coding</text>
+          <rect x="28" y="308" width="210" height="64" rx="8" fill="#111622" stroke="#f87171" stroke-dasharray="5 4"/>
+          <text x="42" y="334" fill="#e6edf7" font-size="13" font-weight="700">Grok</text>
+          <text x="42" y="354" fill="#f87171" font-size="11">missing on this computer</text>
+          <polygon points="430,200 510,120 590,200 510,280" fill="#111622" stroke="#d6deeb" stroke-width="2"/>
+          <text x="510" y="196" text-anchor="middle" fill="#e6edf7" font-size="14" font-weight="700">Project A</text>
+          <text x="510" y="216" text-anchor="middle" fill="#8b96ad" font-size="11">npm test</text>
+          <line x1="238" y1="110" x2="430" y2="188" stroke="#60a5fa" stroke-width="2.5"/>
+          <line x1="238" y1="240" x2="430" y2="210" stroke="#34d399" stroke-width="2.5"/>
+          <rect x="300" y="128" width="86" height="22" rx="11" fill="#111622" stroke="#60a5fa"/>
+          <text x="343" y="143" text-anchor="middle" fill="#60a5fa" font-size="11">Reasoning</text>
+          <rect x="300" y="226" width="72" height="22" rx="11" fill="#111622" stroke="#34d399"/>
+          <text x="336" y="241" text-anchor="middle" fill="#34d399" font-size="11">Coding</text>
+          <rect x="402" y="58" width="210" height="70" rx="8" fill="#111622" stroke="#fbbf24"/>
+          <text x="416" y="82" fill="#e6edf7" font-size="13" font-weight="700">Mistral</text>
+          <text x="416" y="104" fill="#8b96ad" font-size="11">QA · headless API</text>
+        </svg>
+      </div>
+    </div>
+
+    <section id="download">
+      <h2>Install v0.1.0</h2>
+      <p class="sub">Two Windows flavours. They use different product names, icons, colours and AppData folders, so both can sit on the same machine.</p>
+      <div class="grid g2">
+        <article class="card normal">
+          <h3>Orchestra</h3>
+          <p>Daily driver. Cyan brand, normal logo, empty user data. Detects the CLIs already installed on that computer and lets you start them on the canvas.</p>
+          <div class="meta">
+            <span class="pill ok">production flavour</span>
+            <span class="pill">~110 MB</span>
+            <span class="pill">Windows x64</span>
+          </div>
+          <div class="dl">
+            <a class="btn primary" href="https://github.com/hero-999-dev/ai-orchestra/releases/download/v0.1.0/Orchestra-Setup-0.1.0.exe">Orchestra-Setup-0.1.0.exe</a>
+          </div>
+        </article>
+        <article class="card test">
+          <h3>Test Orchestra</h3>
+          <p>One-time 0.1.0 development build. Amber theme, faded logo, title <b>Test Orchestra</b>, and every current markdown / handover file bundled under Help. Use this on the other computer while you keep shipping the normal app.</p>
+          <div class="meta">
+            <span class="pill warn">test flavour · 0.1.0 only</span>
+            <span class="pill">bundled docs</span>
+            <span class="pill">separate AppData</span>
+          </div>
+          <div class="dl">
+            <a class="btn amber" href="https://github.com/hero-999-dev/ai-orchestra/releases/download/v0.1.0/Test-Orchestra-Setup-0.1.0.exe">Test-Orchestra-Setup-0.1.0.exe</a>
+          </div>
+        </article>
+      </div>
+      <p class="sub" style="margin-top:16px">Published copy: <a href="https://hero-999-dev.github.io/ai-orchestra-web/">https://hero-999-dev.github.io/ai-orchestra-web/</a></p>
+    </section>
+
+    <section id="features">
+      <h2>What the app does</h2>
+      <p class="sub">Right-click anywhere on the canvas. Talk to a CLI inside its box. Assign work without leaving the desk.</p>
+      <div class="grid g3">
+        <div class="card"><h3>Canvas of live CLIs</h3><p>Each box is an embedded terminal. Start Claude, Codex, Cursor agent or a shell in the connected project folder — no extra PowerShell window.</p></div>
+        <div class="card"><h3>Right-click to add</h3><p>Empty canvas, a CLI, or a project diamond: add a node, assign a task (Solo / Orchestra / Ask), start or stop a session, run QA, re-detect CLIs.</p></div>
+        <div class="card"><h3>Chat from the box</h3><p>A live session has an input bar at the bottom of the box. Type a line, press Enter, it goes to that CLI. The xterm is still there for the full TUI.</p></div>
+        <div class="card"><h3>Detects what you installed</h3><p>On launch (and every 60s, or F5) Orchestra probes PATH. Missing CLIs show “missing on this computer” and cannot be started. Reinstall and they come back.</p></div>
+        <div class="card"><h3>Role connectors</h3><p>Drag a CLI’s ● port onto a project diamond and tag it Reasoning, Coding, Testing, Review or Shell. Layout persists in local SQLite.</p></div>
+        <div class="card"><h3>Explainable routing</h3><p>Mistral-first QA (2 attempts) against the real test runner, then Composer or Claude. Grok stays a protected reasoning reserve on the shared Cursor pool.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>First launch</h2>
+      <div class="steps">
+        <div class="step"><b>1</b>Run the installer. Pick a folder. Desktop shortcut is created.</div>
+        <div class="step"><b>2</b>Orchestra scans PATH for <code>claude</code>, <code>codex</code>, <code>agent</code>, and a shell.</div>
+        <div class="step"><b>3</b>Right-click the canvas → Add project folder, then Add CLI. Connect the ● port.</div>
+        <div class="step"><b>4</b>Start a session or Assign task. Details, routing and tests live in the bottom panel.</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="card" style="padding:22px 24px">
+        <h3 style="margin:0 0 8px">The long version lives on AI Orchestra Web</h3>
+        <p>Architecture, routing scores, quota reserve, QA escalation, daemon API, config, tests, and the checklist for the next AI. Same self-contained page that ships inside Test Orchestra.</p>
+        <p style="margin-top:14px"><a class="btn primary" href="handover.html">Open AI Orchestra Web</a></p>
+      </div>
+    </section>
+
+    <footer>
+      <div>AI Orchestra v0.1.0 · Electron 44.7.0 · loopback daemon only</div>
+      <div>
+        <a href="https://hero-999-dev.github.io/ai-orchestra-web/">https://hero-999-dev.github.io/ai-orchestra-web/</a> ·
+        <a href="handover.html">AI Orchestra Web</a> ·
+        <a href="https://github.com/hero-999-dev/ai-orchestra">GitHub</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
